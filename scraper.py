@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from email import message
 import sys
 from lxml import html
 from time import sleep
@@ -13,6 +14,7 @@ import smtplib
 import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import cloudscraper
 
 
 class Scraper:
@@ -76,8 +78,11 @@ class Scraper:
         while True:             # Fake do while
             # print("Checking page " + page_number.__str__() + " url: " + url)
             # print("Checking page " + page_number.__str__())
-            page = requests.get(url)
-            page_tree = html.fromstring(page.content)
+            scraper = cloudscraper.create_scraper(delay=10,   browser={'custom': 'ScraperBot/1.0',})
+            #scraper = cloudscraper.create_scraper()
+            page = scraper.get(url)
+            #page = requests.get(url)
+            page_tree = html.fromstring(page.text)
             offers = page_tree.xpath('//div[@class="seznam"]/div[@itemprop="itemListElement"]')
             
             if len(offers) == 0:
@@ -131,7 +136,31 @@ class Scraper:
         message_text = f'{n["title"]}\n{n["link"]} \n{n["desc"]}\nTip: {n["type"]}\n'
         message_text += f'Velikost:{n["size"]}\nCena: {n["price"]}\nAgencija: {n["agency"]}\n\n'
         return message_text
+    def send_tg_message(self, message):
+        tg = self._appdata["telegram"]
+        token = tg["token"]
+        chatid = tg["chatid"]
+        url = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chatid}&text={message}"
+        try:
+            print(requests.get(url).json())
+            ret = True
+        except:
+            print("fail to send message to tg")
+            ret = False
+        return ret
     
+    def send_telegram(self, new, removed):
+        print("Sending message...")
+        if len(new) > 0:
+            for n in new:
+                message_text = "New:\n" + self._get_item_text_message(n)
+                self.send_tg_message(message_text)
+        if len(removed) > 0:
+            for r in removed:
+                message_text ="Remove:" + self._get_item_text_message(r)        
+                self.send_tg_message(message_text)
+        return True
+
     def send_mail(self, new, removed):
         if len(new) == 0 and len(removed) == 0:
             # Ce ni nic novega ne posiljaj..
@@ -186,7 +215,8 @@ class Scraper:
         success = True
         if not nomail:
             # poslji mail
-            success = self.send_mail(new, removed)
+            #success = self.send_mail(new, removed)
+            success = self.send_telegram(new, removed)
         
         # Prejsni funkciji niso cisti, spreminjajo appdata, ki ga bomo sedaj zapisali nazaj za prihodnja izvajanja
         if success:

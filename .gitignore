@@ -1,3 +1,9 @@
 appdata.json
+/dev
 venv/
 .idea/
+/.vs
+/env1
+/run.cmd
+/log
+/err

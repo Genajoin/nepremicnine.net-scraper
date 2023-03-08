@@ -3,6 +3,10 @@
   "urls": [
     "https://www.nepremicnine.net/oglasi-oddaja/ljubljana-mesto/stanovanje/1.5-sobno,2-sobno,2.5-sobno,3-sobno,3.5-sobno/cena-do-600-eur-na-mesec/1/?s=3"
   ],
+  "telegram": {
+    "token": "TG_TOKEN",
+    "chatid": "-726xxxxx9"
+  },
   "smtp": {
     "port": 465,
     "server": "smtp.gmail.com",
